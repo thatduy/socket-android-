@@ -26,6 +26,8 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,20 +37,19 @@ public class MainActivity extends AppCompatActivity {
     TextView txtLog;
 
     private DrawerLayout mDrawerLayout;
+    private NavigationView navigationView;
+
     @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_layout);
-        btnPress = findViewById(R.id.btnPress);
-        txtLog = findViewById(R.id.txtLog);
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        assert wifiManager != null;
-        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
-        myIP = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
-                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
-        myIP = myIP.substring(0, myIP.lastIndexOf("."));
-        Log.d(TAG_CLIENT, myIP);
+        addControls();
+        getIP();
+        addEvents();
+    }
+
+    private void addEvents() {
         btnPress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,9 +57,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
@@ -74,7 +72,26 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     }
                 });
+    }
 
+    private void getIP() {
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        assert wifiManager != null;
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+        myIP = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+        myIP = myIP.substring(0, myIP.lastIndexOf("."));
+        Log.d(TAG_CLIENT, myIP);
+
+
+    }
+
+    private void addControls() {
+        btnPress = findViewById(R.id.btnPress);
+        txtLog = findViewById(R.id.txtLog);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+
+        navigationView = findViewById(R.id.nav_view);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         ActionBar actionbar = getSupportActionBar();
@@ -85,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         mDrawerToggle.syncState();
         //actionbar.setHomeAsUpIndicator(R.drawable.ic_get_file);
     }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
