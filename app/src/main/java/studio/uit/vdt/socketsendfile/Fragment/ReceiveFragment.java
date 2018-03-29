@@ -2,6 +2,7 @@ package studio.uit.vdt.socketsendfile.Fragment;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,6 +13,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,8 +31,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Date;
 
 import studio.uit.vdt.socketsendfile.R;
+import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
 
 /**
  * Created by ASUS on 29-Mar-18.
@@ -37,12 +43,16 @@ import studio.uit.vdt.socketsendfile.R;
 
 public class ReceiveFragment extends Fragment {
     Button btnPress;
-    TextView txtLog;
     Toolbar toolbar;
     private static final String TAG_CLIENT = "LOG_CLIENT";
     String myIP = "";
     View v;
-    ProgressDialog mDialog ;
+
+    private RecyclerView mRecyclerView;
+    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.LayoutManager mLayoutManager;
+    private ArrayList<String> myDataset;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -54,14 +64,28 @@ public class ReceiveFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         btnPress = view.findViewById(R.id.btnPress);
-        txtLog = view.findViewById(R.id.txtLog);
+       // txtLog = view.findViewById(R.id.txtLog);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.my_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecyclerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mLayoutManager = new LinearLayoutManager(getContext());
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        myDataset = new ArrayList<>();
+        // specify an adapter (see also next example)
+        mAdapter = new ReceiveAdapter(myDataset, getContext());
+        mRecyclerView.setAdapter(mAdapter);
+        getReceivedFiles();
+
 
         btnPress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mDialog = new ProgressDialog(getContext());
-                mDialog.setCanceledOnTouchOutside(false);
-                mDialog.show();
+
+
                 getIP();
                 codeProcess();
             }
@@ -70,15 +94,20 @@ public class ReceiveFragment extends Fragment {
 
     }
 
-    @Nullable
-    @Override
-    public View getView() {
-        return v;
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    public void getReceivedFiles() {
+        File myDir = Environment.getExternalStorageDirectory();
+        String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
+        File file = new File(FILE_TO_RECEIVED + "SOCKET FILE");
+        if (file.exists()){
+            for(File x :file.listFiles()){
+
+                Date date = new Date(x.lastModified());
+                myDataset.add(x.getName() + ";" + date.toString());
+
+            }
+            mAdapter.notifyDataSetChanged();
+        }
 
     }
 
@@ -88,8 +117,9 @@ public class ReceiveFragment extends Fragment {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    txtLog.setText((String) msg.obj);
-                    mDialog.cancel();
+                    myDataset.add((String) msg.obj);
+                    mAdapter.notifyDataSetChanged();
+
                 }
             });
 
@@ -129,41 +159,49 @@ public class ReceiveFragment extends Fragment {
     }
 
     public void processClient(String ip) throws Exception{
+
         File myDir = Environment.getExternalStorageDirectory();
         String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
         File file = new File(FILE_TO_RECEIVED + "SOCKET FILE");
         if (!file.exists()){
             file.mkdir();
         }
-        Socket socket = new Socket(ip, 13267);
-        InputStream is = socket.getInputStream();
-        DataInputStream d = new DataInputStream(is);
-        // GlobalVar.log += ip + " is connected \n";
-        String data = d.readUTF().trim();
-        String name = file.getAbsolutePath() + "/"+data;
-        BufferedInputStream in =
-                new BufferedInputStream(socket.getInputStream());
+        int i = -1;
+        while (i != 0) {
+            Socket socket = new Socket(ip, 13267);
+            InputStream is = socket.getInputStream();
+            DataInputStream d = new DataInputStream(is);
+            // GlobalVar.log += ip + " is connected \n";
+            String data = d.readUTF().trim();
+            if(i != -1){
+                i = Integer.parseInt(data.split(";")[1]);
+            }
 
-        BufferedOutputStream out =
-                new BufferedOutputStream(new FileOutputStream(name));
+            String name = file.getAbsolutePath() + "/"+data.split(";")[0];
+            BufferedInputStream in =
+                    new BufferedInputStream(socket.getInputStream());
 
-        int len = 0;
-        byte[] buffer = new byte[1024*50];
-        while ((len = in.read(buffer)) > 0) {
-            out.write(buffer, 0, len);
+            BufferedOutputStream out =
+                    new BufferedOutputStream(new FileOutputStream(name));
+
+            int len = 0;
+            byte[] buffer = new byte[1024*50];
+            while ((len = in.read(buffer)) > 0) {
+                out.write(buffer, 0, len);
+            }
+            in.close();
+            out.flush();
+            out.close();
+            socket.close();
+            i--;
+            Log.d(TAG_CLIENT, "DONE");
+
+            Message message = new Message();
+            message.obj = data.split(";")[0] +";"+new Date().toString()  ;
+            handler.handleMessage(message);
         }
-        in.close();
-        out.flush();
-        out.close();
-        socket.close();
-        // GlobalVar.log += "RECEIVED at " + name + "\n";
-        //  GlobalVar.log+="RECEIVED successfully \n";
-        //  System.out.println("\nDone!");
-        Log.d(TAG_CLIENT, "DONE");
 
-        Message message = new Message();
-        message.obj = "Connected to "+ip + "\nReceiving file " + data + "\nSaving at " + name + "\n" + "Receive successfully!";
-        handler.handleMessage(message);
+
 
     }
 }
