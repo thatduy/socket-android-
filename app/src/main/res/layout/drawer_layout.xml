@@ -8,32 +8,28 @@
     android:fitsSystemWindows="true">
 
     <!-- Layout to contain contents of main body of screen (drawer will slide over this) -->
+
     <LinearLayout
-        android:id="@+id/content_frame"
         android:layout_width="match_parent"
-        android:orientation="vertical"
-        android:layout_height="match_parent" >
+        android:layout_height="match_parent"
+        android:orientation="vertical">
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
+            app:title="Receive File"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar" />
-        <Button
-            android:id="@+id/btnPress"
+        <FrameLayout
+            android:id="@+id/content_frame"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="PRESS TO RECEIVE FILE"
-            />
+            android:orientation="vertical"
+            android:layout_height="match_parent" >
 
-        <TextView
-            android:id="@+id/txtLog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=""
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="20sp" />
+        </FrameLayout>
     </LinearLayout>
+
+
 
     <LinearLayout
         android:layout_width="@dimen/navigation_drawer_width"
@@ -49,9 +45,10 @@
             android:layout_width="@dimen/navigation_drawer_width"
             android:layout_height="match_parent"
             android:layout_gravity="start"
+            android:background="@color/colorPrimary"
             android:fitsSystemWindows="true"
             app:menu="@menu/drawer_view"
-
+            app:itemIconTint="@color/colorWhite"
             />
     </LinearLayout>
 

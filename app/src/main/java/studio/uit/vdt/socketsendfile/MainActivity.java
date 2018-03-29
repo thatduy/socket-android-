@@ -1,12 +1,15 @@
 package studio.uit.vdt.socketsendfile;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -19,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -30,11 +34,11 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.Socket;
 
+import studio.uit.vdt.socketsendfile.Fragment.ReceiveFragment;
+import studio.uit.vdt.socketsendfile.Fragment.SendFragment;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG_CLIENT = "LOG_CLIENT";
-    String myIP = "";
-    Button btnPress;
-    TextView txtLog;
 
     private DrawerLayout mDrawerLayout;
     private NavigationView navigationView;
@@ -45,17 +49,41 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.drawer_layout);
         addControls();
-        getIP();
         addEvents();
+        displayView(R.id.nav_get_file);
     }
+    @SuppressLint("RestrictedApi")
+    public void displayView(int viewId) {
 
+        Fragment fragment = null;
+        String title = getString(R.string.app_name);
+
+        switch (viewId) {
+            case R.id.nav_send_file:
+                fragment = new SendFragment();
+                title  = "Send File";
+                break;
+            case R.id.nav_get_file:
+                fragment = new ReceiveFragment();
+                title  = "Receive File";
+                break;
+        }
+
+        if (getSupportActionBar() != null){
+            getSupportActionBar().setTitle(title);
+        }
+        if (fragment != null) {
+            mDrawerLayout.closeDrawer(GravityCompat.START);
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.content_frame, fragment);
+            ft.commit();
+
+        }
+
+
+    }
     private void addEvents() {
-        btnPress.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                codeProcess();
-            }
-        });
+
 
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
@@ -66,41 +94,25 @@ public class MainActivity extends AppCompatActivity {
                         // close drawer when item is tapped
                         mDrawerLayout.closeDrawers();
 
-                        // Add code here to update the UI based on the item selected
-                        // For example, swap UI fragments here
-
+                        displayView(menuItem.getItemId());
                         return true;
                     }
                 });
     }
 
-    private void getIP() {
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        assert wifiManager != null;
-        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
-        myIP = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
-                (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
-        myIP = myIP.substring(0, myIP.lastIndexOf("."));
-        Log.d(TAG_CLIENT, myIP);
 
-
-    }
 
     private void addControls() {
-        btnPress = findViewById(R.id.btnPress);
-        txtLog = findViewById(R.id.txtLog);
-        mDrawerLayout = findViewById(R.id.drawer_layout);
 
-        navigationView = findViewById(R.id.nav_view);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        ActionBar actionbar = getSupportActionBar();
-
-        ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, toolbar, R.string.app_name, R.string.app_name);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+        ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                toolbar, R.string.app_name, R.string.app_name);
         mDrawerToggle.setDrawerIndicatorEnabled(true);
         mDrawerLayout.setDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
-        //actionbar.setHomeAsUpIndicator(R.drawable.ic_get_file);
     }
 
     @Override
@@ -109,75 +121,16 @@ public class MainActivity extends AppCompatActivity {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+            case R.id.nav_send_file:
+                Toast.makeText(MainActivity.this, "SEND", Toast.LENGTH_SHORT).show();
+                return true;
+            case R.id.nav_get_file:
+                Toast.makeText(MainActivity.this, "GET", Toast.LENGTH_SHORT).show();
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                return true;
+
         }
         return super.onOptionsItemSelected(item);
     }
-    Handler handler = new Handler(Looper.getMainLooper()){
-        @Override
-        public void handleMessage(final Message msg) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    txtLog.setText((String) msg.obj);
-                }
-            });
-        }
-    };
-    public void codeProcess(){
-        for (int i = 1; i <= 254; i++) {
-            final int j = i;
-            new Thread(new Runnable() { // new thread for
-                public void run() {
-                    try {
-                        String output = myIP+"."+j;
 
-                        processClient(output);
-
-                    }catch (Exception e) {
-                        // TODO: handle exception
-                        Log.d(TAG_CLIENT, e.toString());
-                    }
-                }
-            }).start();;
-        }
-    }
-
-    public void processClient(String ip) throws Exception{
-        File myDir = Environment.getExternalStorageDirectory();
-        String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
-        File file = new File(FILE_TO_RECEIVED + "SOCKET FILE");
-        if (!file.exists()){
-            file.mkdir();
-        }
-        Socket socket = new Socket(ip, 13267);
-        InputStream is = socket.getInputStream();
-        DataInputStream d = new DataInputStream(is);
-        // GlobalVar.log += ip + " is connected \n";
-        String data = d.readUTF().trim();
-        String name = file.getAbsolutePath() + "/"+data;
-        BufferedInputStream in =
-                new BufferedInputStream(socket.getInputStream());
-
-        BufferedOutputStream out =
-                new BufferedOutputStream(new FileOutputStream(name));
-
-        int len = 0;
-        byte[] buffer = new byte[1024*50];
-        while ((len = in.read(buffer)) > 0) {
-            out.write(buffer, 0, len);
-        }
-        in.close();
-        out.flush();
-        out.close();
-        socket.close();
-        // GlobalVar.log += "RECEIVED at " + name + "\n";
-        //  GlobalVar.log+="RECEIVED successfully \n";
-        //  System.out.println("\nDone!");
-        Log.d(TAG_CLIENT, "DONE");
-
-        Message message = new Message();
-        message.obj = "Connected to "+ip + "\nReceiving file " + data + "\nSaving at " + name + "\n" + "Receive successfully!";
-        handler.handleMessage(message);
-
-    }
 }

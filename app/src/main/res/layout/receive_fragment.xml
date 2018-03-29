@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_all"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btnPress"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/height_button_normal"
+        android:text="@string/receive_file"
+        />
+
+    <TextView
+        android:id="@+id/txtLog"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimaryDark"
+         />
+</LinearLayout>
+

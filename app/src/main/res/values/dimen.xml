@@ -4,5 +4,8 @@
      https://developer.android.com/design/patterns/navigation-drawer.html -->`enter code here
     <dimen name="navigation_drawer_width">200dp</dimen>
     <dimen name="toolbar_elevation">4dp</dimen>
+    <dimen name="height_button_normal">50dp</dimen>
+    <dimen name="padding_all">10dp</dimen>
+    <dimen name="textSize">18sp</dimen>
 
 </resources>

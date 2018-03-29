@@ -6,6 +6,39 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:textViewStyle">@style/MyTextViewStyle</item>
+        <item name="buttonStyle">@style/MyButtonStyle</item>
+        <item name="toolbarStyle">@style/MyToolBarStyle</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textColorPrimary">@android:color/white</item>
+        <item name="android:actionMenuTextColor">@android:color/black</item>
+        <item name="android:textSize">@dimen/textSize</item>
+        <item name="dialogTheme">@style/CustomDialogTheme</item>
+
+    </style>
+    <style name="MyTextViewStyle" parent="android:Widget.TextView">
+        <item name="android:textColor">@color/colorWhite</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/textSize</item>
+    </style>
+    <style name="MyButtonStyle" parent="android:Widget.Button">
+    <item name="android:textColor">@color/colorWhite</item>
+    <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/textSize</item>
+    <item name="android:background">@drawable/bg_button</item>
+
+</style>
+    <style name="MyToolBarStyle" parent="Base.Widget.AppCompat.Toolbar">
+        <item name="android:textSize">@dimen/textSize</item>
+
+    </style>
+
+    <style name="CustomDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
 </resources>

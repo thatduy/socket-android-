@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Socket Tranfer</string>
+    <string name="send_file">Send File</string>
+    <string name="receive_file">Receive File</string>
 </resources>
