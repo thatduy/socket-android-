@@ -1,41 +1,21 @@
-package studio.uit.vdt.socketsendfile;
+package studio.uit.vdt.socketsendfile.view;
 
 import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.net.wifi.WifiManager;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.Socket;
 
 import studio.uit.vdt.socketsendfile.Fragment.ReceiveFragment;
 import studio.uit.vdt.socketsendfile.Fragment.SendFragment;
+import studio.uit.vdt.socketsendfile.R;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG_CLIENT = "LOG_CLIENT";

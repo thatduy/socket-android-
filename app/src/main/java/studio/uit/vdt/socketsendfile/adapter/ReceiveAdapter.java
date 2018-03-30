@@ -35,8 +35,10 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
         // each data item is just a string in this case
         public TextView txt_file_name;
         public TextView txt_from_ip;
+        public View view;
         public ViewHolder(View v) {
             super(v);
+            view = v;
             txt_file_name = v.findViewById(R.id.txt_name_file);
             txt_from_ip = v.findViewById(R.id.txt_from_ip);
         }
@@ -82,7 +84,7 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
         holder.txt_file_name.setText(mDataset.get(p).split(";")[0]);
         holder.txt_from_ip.setText(mDataset.get(p).split(";")[1].substring(0, 19));
 
-        holder.txt_file_name.setOnClickListener(new View.OnClickListener() {
+        holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 open_file(mDataset.get(p).split(";")[0]);
