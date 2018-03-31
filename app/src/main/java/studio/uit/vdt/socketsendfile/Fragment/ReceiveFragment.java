@@ -37,7 +37,6 @@ import studio.uit.vdt.socketsendfile.R;
 
 public class ReceiveFragment extends Fragment {
     private Button btnPress;
-    private RecyclerView mRecyclerView;
     private ReceiveFilePresenter filePresenter;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,7 +49,7 @@ public class ReceiveFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         btnPress = view.findViewById(R.id.btnPress);
-        mRecyclerView =  view.findViewById(R.id.my_recycler_view);
+        RecyclerView mRecyclerView = view.findViewById(R.id.my_recycler_view);
         filePresenter = new ReceiveFilePresenter(getContext(), mRecyclerView);
         filePresenter.getReceivedFiles();
         btnPress.setOnClickListener(new View.OnClickListener() {

@@ -1,4 +1,4 @@
-package studio.uit.vdt.socketsendfile;
+package studio.uit.vdt.socketsendfile.service;
 
 import android.app.Service;
 import android.content.Intent;
@@ -54,7 +54,6 @@ public class ServiceSendFile extends Service {
             try {
 
                 socket = new ServerSocket(13267);
-
                 client = socket.accept();
                 Log.d(TAG, fileNames.size() + " items");
                 DataOutputStream d = new DataOutputStream(client.getOutputStream());

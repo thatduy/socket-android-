@@ -5,13 +5,22 @@ package studio.uit.vdt.socketsendfile.model;
  */
 
 public class SendModel {
-    private int count;
-    private String ip;
-    private String name;
-    private String date;
+    private int count = 0;
+    private String ip = "";
+    private String name = "";
+    private String date = "";
+    private String path = "";
 
     public int getCount() {
         return count;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public void setCount(int count) {
@@ -42,11 +51,13 @@ public class SendModel {
         this.date = date;
     }
 
-    public SendModel(int count, String ip, String name, String date) {
+    public SendModel(int count, String ip, String name, String date, String path) {
 
         this.count = count;
         this.ip = ip;
         this.name = name;
         this.date = date;
+        this.path = path;
     }
+
 }

@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".ServiceSendFile"
+        <service android:name=".service.ServiceSendFile"
             android:stopWithTask="false"
             />
     </application>

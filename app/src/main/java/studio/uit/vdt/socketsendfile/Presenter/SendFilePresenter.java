@@ -1,10 +1,14 @@
 package studio.uit.vdt.socketsendfile.Presenter;
 
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -23,11 +27,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
 
-import studio.uit.vdt.socketsendfile.ServiceSendFile;
 import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
+import studio.uit.vdt.socketsendfile.model.SendModel;
 
 /*
  * Created by ASUS on 30-Mar-18.
@@ -36,22 +38,21 @@ import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
 public class SendFilePresenter extends BasePresenter {
     private final static String TAG = "SendFilePresenter";
     private final static int PICKFILE_REQUEST_CODE = 1122;
-    private RecyclerView recyclerView;
+    //private RecyclerView recyclerView;
     private ReceiveAdapter receiveAdapter;
-    private ArrayList<String> filePaths;
-    private ArrayList<String> fileNames;
+    private ArrayList<SendModel> models;
     private Fragment activity;
-    ServerSocket socket;
-    Socket client;
+    private ServerSocket socket;
+    private Socket client;
 
-    public SendFilePresenter(Context context, Fragment fragment, ArrayList<String> filePaths,
-                             ArrayList<String> fileNames, RecyclerView recyclerView) {
+    public SendFilePresenter(Context context, Fragment fragment,
+                             ArrayList<SendModel> models, RecyclerView recyclerView) {
         super(context);
-        this.filePaths = filePaths;
-        this.fileNames = fileNames;
+
+        this.models = models;
         this.activity = fragment;
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
-        receiveAdapter = new ReceiveAdapter(filePaths, fileNames, context, true);
+        receiveAdapter = new ReceiveAdapter(models, context, true);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(receiveAdapter);
@@ -64,10 +65,23 @@ public class SendFilePresenter extends BasePresenter {
 
     public void openFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
+
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR2){
+            // Do something for lollipop and above versions
+            //intent.setAction(Intent.ACTION_PICK);
+            intent.setType("image/* video/*");
+
+        } else{
+            // do something for phones running an SDK before lollipop
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+            }
+        }
+
+
         // special intent for Samsung file manager
         Intent sIntent = new Intent("com.sec.android.app.myfiles.PICK_DATA_MULTIPLE");
         // if you want any file type, you can skip next line
@@ -84,7 +98,7 @@ public class SendFilePresenter extends BasePresenter {
         }
         try {
             activity.startActivityForResult(chooserIntent, PICKFILE_REQUEST_CODE);
-        } catch (android.content.ActivityNotFoundException ex) {
+        } catch (ActivityNotFoundException ex) {
             Toast.makeText(context, "No suitable File Manager was found.", Toast.LENGTH_SHORT).show();
         }
     }
@@ -99,68 +113,103 @@ public class SendFilePresenter extends BasePresenter {
         cursor.close();
         return result;
     }
+    private Handler handler = new Handler(Looper.getMainLooper()){
+        @Override
+        public void handleMessage(final Message msg) {
+            ((Activity)context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    SendModel a = (SendModel)msg.obj;
+                    progressDialog.setTitle("Sending to " + client);
+                    progressDialog.setMessage("Sent " + a.getName());
+                    //models.remove(a);
+                    //Log.d(TAG, "INDEX " + a);receiveAdapter.getItemCount();
 
-    public void startServer(){
-//        Intent intent = new Intent(context, ServiceSendFile.class);
-//        intent.putStringArrayListExtra("FILENAME", fileNames);
-//        intent.putStringArrayListExtra("FILEPATH", filePaths);
-//
-//        context.startService(intent);
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                startServer2();
-            }
-        }).start();
-    }
-    public void startServer2() {
-        for (int i = 0; i < fileNames.size(); i++) {
-            final int finalI = i;
-            ServerSocket socket = null;
-            Socket client = null;
-            try {
-
-                socket = new ServerSocket(13267);
-
-                client = socket.accept();
-                Log.d(TAG, fileNames.size() + " items");
-                DataOutputStream d = new DataOutputStream(client.getOutputStream());
-                d.writeUTF(fileNames.get(finalI) + ";" + fileNames.size());
-                BufferedInputStream in = new BufferedInputStream(
-                        new FileInputStream(filePaths.get(finalI)));
-                BufferedOutputStream out = new BufferedOutputStream(client.getOutputStream());
-                int len = 0;
-                byte[] buffer = new byte[1024 * 50];
-                while ((len = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, len);
 
                 }
-                in.close();
-                out.flush();
-                out.close();
+            });
+        }
+    };
+
+    public void startServer() throws Exception{
+            showProgress("Wait....", "Scanning client...");
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                        try {
+                            socket = new ServerSocket(13267);
+                            startServer2();
+                            }
+
+                        catch (Exception e){
+                            Log.d(TAG, e.toString());
+                        }
+            }}).start();
+
+
+    }
+    public void stopSocket() throws Exception{
+        if(socket != null){
+            socket.close();
+        }
+        if(client != null){
+            client.close();
+        }
+    }
+    private void startServer2() {
+            try {
+                for (SendModel file : models) {
+                    client = socket.accept();
+                    Log.d(TAG, models.size() + " items");
+                    DataOutputStream d = new DataOutputStream(client.getOutputStream());
+                    d.writeUTF(file.getName() + ";" + models.size());
+                    BufferedInputStream in = new BufferedInputStream(
+                            new FileInputStream(file.getPath()));
+                    BufferedOutputStream out = new BufferedOutputStream(client.getOutputStream());
+                    int len;
+                    byte[] buffer = new byte[1024 * 50];
+                    while ((len = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, len);
+                    }
+                    out.flush();
+                    d.close();
+                    in.close();
+                    out.close();
+
+                    Message message = new Message();
+                    message.obj = file;
+                    handler.handleMessage(message);
+                }
 
             } catch (Exception e) {
                 // TODO: handle exception
                 Log.d(TAG, e.toString());
             } finally {
-                Log.d(TAG, "CLOSE ALL");
+
+                updateRemove();
                 try {
-
-                    if (socket != null) {
-                        socket.close();
-                    }
-
-                    if (client != null)
-                        client.close();
+                    socket.close();
+                    client.close();
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     Log.d(TAG, e.toString());
                 }
 
             }
 
-        }}
+        }
+        private void updateRemove(){
+            ((Activity)context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    models.clear();
+                    receiveAdapter.notifyDataSetChanged();
+                    hideProgress();
+                    showToast("DONE!");
+
+
+                }
+            });
+        }
 }
 
 

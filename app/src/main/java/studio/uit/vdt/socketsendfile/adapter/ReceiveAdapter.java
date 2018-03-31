@@ -18,6 +18,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import studio.uit.vdt.socketsendfile.R;
+import studio.uit.vdt.socketsendfile.model.SendModel;
 
 /*
  * Created by ASUS on 29-Mar-18.
@@ -25,8 +26,7 @@ import studio.uit.vdt.socketsendfile.R;
 
 
 public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHolder> {
-    private ArrayList<String> mDataset;
-    private ArrayList<String> filePaths;
+    private ArrayList<SendModel> mDataset;
     private Context context;
     private boolean isSend = false;
     private final static String TAG = "ReceiveAdapter";
@@ -48,11 +48,10 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public ReceiveAdapter(ArrayList<String> filePaths,ArrayList<String> myDataset, Context context, boolean isSend ) {
+    public ReceiveAdapter(ArrayList<SendModel> myDataset, Context context, boolean isSend ) {
         mDataset = myDataset;
         this.context = context;
         this.isSend = isSend;
-        this.filePaths = filePaths;
     }
 
     // Create new views (invoked by the layout manager)
@@ -94,18 +93,13 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         final int p = mDataset.size() - position - 1;
-        holder.txt_file_name.setText(mDataset.get(p).split(";")[0]);
-        holder.txt_from_ip.setText(mDataset.get(p).split(";")[1].substring(0, 19));
+        holder.txt_file_name.setText(mDataset.get(p).getName());
+        holder.txt_from_ip.setText(mDataset.get(p).getDate());
 
         holder.view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(isSend){
-                    open_file(filePaths.get(p));
-                } else {
-                    open_file(mDataset.get(p).split(";")[0]);
-                }
-
+                open_file(mDataset.get(p).getPath());
             }
         });
     }

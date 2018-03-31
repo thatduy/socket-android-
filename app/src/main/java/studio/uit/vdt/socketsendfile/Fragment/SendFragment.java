@@ -19,10 +19,11 @@ import java.util.Date;
 
 import studio.uit.vdt.socketsendfile.Presenter.SendFilePresenter;
 import studio.uit.vdt.socketsendfile.R;
+import studio.uit.vdt.socketsendfile.model.SendModel;
 
 import static android.app.Activity.RESULT_OK;
 
-/**
+/*
  * Created by ASUS on 29-Mar-18.
  */
 
@@ -32,9 +33,7 @@ public class SendFragment extends Fragment {
     private SendFilePresenter sendFilePresenter;
     private final static int PICKFILE_REQUEST_CODE = 1122;
     private final static String TAG_SEND_FILE = "SendFragment";
-    private ArrayList<String> filePaths = new ArrayList<>();
-    private ArrayList<String> fileName = new ArrayList<>();
-    private RecyclerView recyclerView;
+    private ArrayList<SendModel> sendModels = new ArrayList<>();
     private boolean isSelectedFile = false;
 
     @Override
@@ -48,9 +47,9 @@ public class SendFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         btn_send_file = view.findViewById(R.id.btn_send_file);
-        recyclerView = view.findViewById(R.id.my_recycler_view);
+        RecyclerView recyclerView = view.findViewById(R.id.my_recycler_view);
         sendFilePresenter = new SendFilePresenter(getContext(), SendFragment.this,
-                filePaths, fileName, recyclerView);
+                sendModels, recyclerView);
 
         btn_send_file.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -81,14 +80,19 @@ public class SendFragment extends Fragment {
                         Uri uri = data.getClipData().getItemAt(i).getUri();
                         File file = new File(sendFilePresenter.getRealPathFromURI(uri));
                         Log.d(TAG_SEND_FILE, file.getAbsolutePath());
-                        filePaths.add(file.getAbsolutePath());
-                        fileName.add(file.getName() + ";" + new Date(file.lastModified()).toString());
+                        SendModel model = new SendModel(0,"", file.getName(),
+                                new Date(file.lastModified()).toString(), file.getAbsolutePath());
+
+                        sendModels.add(model);
                     }
                 } else {
                     Uri uri = data.getData();
                     File file = new File(sendFilePresenter.getRealPathFromURI(uri));
-                    filePaths.add(file.getAbsolutePath());
-                    fileName.add(file.getName() + ";" + new Date(file.lastModified()).toString());
+                    Log.d(TAG_SEND_FILE, file.getAbsolutePath());
+                    SendModel model = new SendModel(0,"", file.getName(),
+                            new Date(file.lastModified()).toString(), file.getAbsolutePath());
+
+                    sendModels.add(model);
                 }
                 isSelectedFile = true;
                 btn_send_file.setText(getString(R.string.send_file));
@@ -97,5 +101,13 @@ public class SendFragment extends Fragment {
         }
     }
 
-
+    @Override
+    public void onStop() {
+        super.onStop();
+        try {
+            sendFilePresenter.stopSocket();
+        } catch (Exception e) {
+            Log.d(TAG_SEND_FILE, e.toString());
+        }
+    }
 }
