@@ -72,7 +72,7 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
         }else{
             File myDir = Environment.getExternalStorageDirectory();
             String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
-            file = new File(FILE_TO_RECEIVED + "SOCKET FILE/" + filename);
+            file = new File(FILE_TO_RECEIVED + "SOCKETFILEs/" + filename);
             Log.d(TAG, file.getAbsolutePath());
         }
 

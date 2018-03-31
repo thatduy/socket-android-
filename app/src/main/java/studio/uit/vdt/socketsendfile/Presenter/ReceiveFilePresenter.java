@@ -2,6 +2,7 @@ package studio.uit.vdt.socketsendfile.Presenter;
 
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
@@ -12,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -27,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 
+import studio.uit.vdt.socketsendfile.R;
 import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
+import studio.uit.vdt.socketsendfile.model.SendModel;
 
 /*
  * Created by VDT on 30-Mar-18.
@@ -37,6 +41,9 @@ public class ReceiveFilePresenter extends BasePresenter {
     private final static String TAG = ReceiveFilePresenter.class.getSimpleName();
     private ReceiveAdapter receiveAdapter;
     private ArrayList<String> mData;
+    private final static String FOLDER_NAME = "SOCKETFILEs";
+    ProgressDialog progressDialog;
+    private int count = 0;
 
     private String myIP;
 
@@ -50,11 +57,24 @@ public class ReceiveFilePresenter extends BasePresenter {
         recyclerView.setAdapter(receiveAdapter);
 
     }
-
+    private void showProgress(String til, String mess){
+        progressDialog = new ProgressDialog(context, R.style.NewDialog);
+        progressDialog.setTitle(til);
+        progressDialog.setMessage(mess);
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCanceledOnTouchOutside(false);
+        progressDialog.show();
+    }
+    private void hideProgress(){
+        if (progressDialog != null){
+            progressDialog.dismiss();
+        }
+    }
     public void getReceivedFiles() {
+
         File myDir = Environment.getExternalStorageDirectory();
         String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
-        File file = new File(FILE_TO_RECEIVED + "SOCKET FILE");
+        File file = new File(FILE_TO_RECEIVED + FOLDER_NAME);
         if (file.exists()) {
             for (File x : file.listFiles()) {
 
@@ -74,15 +94,27 @@ public class ReceiveFilePresenter extends BasePresenter {
             ((Activity)context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mData.add((String) msg.obj);
+                    SendModel receive = (SendModel) msg.obj;
+                    progressDialog.setTitle("From "+receive.getIp());
+                    progressDialog.setMessage("Receiving "+ receive.getName());
+                    mData.add(receive.getName()+";"+receive.getDate());
                     receiveAdapter.notifyDataSetChanged();
+                    if (receive.getCount() == 1){
+                        hideProgress();
+                        showToast("DONE!");
+                    }
+
                 }
             });
 
         }
     };
+    public void showToast(String s){
+        Toast.makeText(context, s, Toast.LENGTH_LONG).show();
+    }
 
     private void getIP() {
+        showProgress("Wait...","Scanning server..." );
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
@@ -92,6 +124,7 @@ public class ReceiveFilePresenter extends BasePresenter {
         Log.d(TAG, myIP);
     }
     public void codeProcess() {
+
         getIP();
         for (int i = 1; i <= 254; i++) {
             final int j = i;
@@ -114,19 +147,20 @@ public class ReceiveFilePresenter extends BasePresenter {
 
         File myDir = Environment.getExternalStorageDirectory();
         String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
-        File file = new File(FILE_TO_RECEIVED + "SOCKET FILE");
+        File file = new File(FILE_TO_RECEIVED + FOLDER_NAME);
         if (!file.exists()) {
             file.mkdir();
         }
         int i = -1;
         while (i != 0) {
             Socket socket = new Socket(ip, 13267);
+
             InputStream is = socket.getInputStream();
             DataInputStream d = new DataInputStream(is);
 
             String data = d.readUTF().trim();
             if (i != -1) {
-                i = Integer.parseInt(data.split(";")[1]);
+               count = i = Integer.parseInt(data.split(";")[1]);
             }
 
             String name = file.getAbsolutePath() + "/" + data.split(";")[0];
@@ -147,9 +181,10 @@ public class ReceiveFilePresenter extends BasePresenter {
             socket.close();
             i--;
             Log.d(TAG, "DONE");
-
+            count--;
             Message message = new Message();
-            message.obj = data.split(";")[0] + ";" + new Date().toString();
+            SendModel sendModel = new SendModel(count, ip, data.split(";")[0],new Date().toString() );
+            message.obj = sendModel;
             handler.handleMessage(message);
         }
 
