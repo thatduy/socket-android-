@@ -56,7 +56,6 @@ public class ReceiveFragment extends Fragment {
         btnPress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 filePresenter.codeProcess();
             }
         });

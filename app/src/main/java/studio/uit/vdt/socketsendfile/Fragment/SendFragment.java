@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Date;
 
 import studio.uit.vdt.socketsendfile.Presenter.SendFilePresenter;
 import studio.uit.vdt.socketsendfile.R;
@@ -29,7 +32,10 @@ public class SendFragment extends Fragment {
     private SendFilePresenter sendFilePresenter;
     private final static int PICKFILE_REQUEST_CODE = 1122;
     private final static String TAG_SEND_FILE = "SendFragment";
-
+    private ArrayList<String> filePaths = new ArrayList<>();
+    private ArrayList<String> fileName = new ArrayList<>();
+    private RecyclerView recyclerView;
+    private boolean isSelectedFile = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -38,21 +44,31 @@ public class SendFragment extends Fragment {
         return inflater.inflate(R.layout.send_fragment, container, false);
     }
 
-
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         btn_send_file = view.findViewById(R.id.btn_send_file);
-        sendFilePresenter = new SendFilePresenter(getContext());
+        recyclerView = view.findViewById(R.id.my_recycler_view);
+        sendFilePresenter = new SendFilePresenter(getContext(), SendFragment.this,
+                filePaths, fileName, recyclerView);
 
         btn_send_file.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendFilePresenter.openFile("*/*");
+                if(isSelectedFile){
+                    try {
+                        sendFilePresenter.startServer();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    sendFilePresenter.openFile();
+                }
+
             }
         });
     }
+
 
 
     @Override
@@ -63,21 +79,23 @@ public class SendFragment extends Fragment {
                 if(null != data.getClipData()) { // checking multiple selection or not
                     for(int i = 0; i < data.getClipData().getItemCount(); i++) {
                         Uri uri = data.getClipData().getItemAt(i).getUri();
-
-                        File file = new File(uri.getPath());
+                        File file = new File(sendFilePresenter.getRealPathFromURI(uri));
                         Log.d(TAG_SEND_FILE, file.getAbsolutePath());
+                        filePaths.add(file.getAbsolutePath());
+                        fileName.add(file.getName() + ";" + new Date(file.lastModified()).toString());
                     }
                 } else {
                     Uri uri = data.getData();
+                    File file = new File(sendFilePresenter.getRealPathFromURI(uri));
+                    filePaths.add(file.getAbsolutePath());
+                    fileName.add(file.getName() + ";" + new Date(file.lastModified()).toString());
                 }
+                isSelectedFile = true;
+                btn_send_file.setText(getString(R.string.send_file));
+                sendFilePresenter.updateList();
             }
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-    }
 
 }

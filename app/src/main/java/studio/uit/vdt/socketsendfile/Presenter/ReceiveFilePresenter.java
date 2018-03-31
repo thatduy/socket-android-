@@ -1,37 +1,40 @@
 package studio.uit.vdt.socketsendfile.Presenter;
 
+
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.Inet4Address;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
 
-/**
+/*
  * Created by VDT on 30-Mar-18.
  */
 
 public class ReceiveFilePresenter extends BasePresenter {
     private final static String TAG = ReceiveFilePresenter.class.getSimpleName();
-    private RecyclerView.LayoutManager layoutManager;
     private ReceiveAdapter receiveAdapter;
     private ArrayList<String> mData;
 
@@ -39,11 +42,10 @@ public class ReceiveFilePresenter extends BasePresenter {
 
     public ReceiveFilePresenter(Context context, RecyclerView recyclerView) {
         super(context);
-        layoutManager = new LinearLayoutManager(context);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
         mData = new ArrayList<>();
-        receiveAdapter = new ReceiveAdapter(mData, context);
+        receiveAdapter = new ReceiveAdapter(null,mData, context, false);
         recyclerView.setHasFixedSize(true);
-        layoutManager = new LinearLayoutManager(context);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(receiveAdapter);
 
@@ -65,16 +67,18 @@ public class ReceiveFilePresenter extends BasePresenter {
 
     }
 
-
-    public void showToast() {
-        Toast.makeText(context, "File downloaded", Toast.LENGTH_LONG).show();
-    }
-
     private Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(final Message msg) {
-            mData.add((String) msg.obj);
-            receiveAdapter.notifyDataSetChanged();
+
+            ((Activity)context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mData.add((String) msg.obj);
+                    receiveAdapter.notifyDataSetChanged();
+                }
+            });
+
         }
     };
 
@@ -82,12 +86,11 @@ public class ReceiveFilePresenter extends BasePresenter {
         WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
         int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
-        myIP = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
+        myIP = String.format(Locale.getDefault(), "%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff),
                 (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
         myIP = myIP.substring(0, myIP.lastIndexOf("."));
         Log.d(TAG, myIP);
     }
-
     public void codeProcess() {
         getIP();
         for (int i = 1; i <= 254; i++) {
@@ -103,7 +106,7 @@ public class ReceiveFilePresenter extends BasePresenter {
                     }
                 }
             }).start();
-            ;
+
         }
     }
 
@@ -133,7 +136,7 @@ public class ReceiveFilePresenter extends BasePresenter {
             BufferedOutputStream out =
                     new BufferedOutputStream(new FileOutputStream(name));
 
-            int len = 0;
+            int len;
             byte[] buffer = new byte[1024 * 50];
             while ((len = in.read(buffer)) > 0) {
                 out.write(buffer, 0, len);

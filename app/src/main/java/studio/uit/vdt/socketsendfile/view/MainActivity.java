@@ -1,6 +1,7 @@
 package studio.uit.vdt.socketsendfile.view;
 
 import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -18,7 +19,6 @@ import studio.uit.vdt.socketsendfile.Fragment.SendFragment;
 import studio.uit.vdt.socketsendfile.R;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG_CLIENT = "LOG_CLIENT";
 
     private DrawerLayout mDrawerLayout;
     private NavigationView navigationView;
@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         addEvents();
         displayView(R.id.nav_get_file);
     }
+
     @SuppressLint("RestrictedApi")
     public void displayView(int viewId) {
 
@@ -41,15 +42,15 @@ public class MainActivity extends AppCompatActivity {
         switch (viewId) {
             case R.id.nav_send_file:
                 fragment = new SendFragment();
-                title  = "Send File";
+                title = "Send File";
                 break;
             case R.id.nav_get_file:
                 fragment = new ReceiveFragment();
-                title  = "Receive File";
+                title = "Receive File";
                 break;
         }
 
-        if (getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
         }
         if (fragment != null) {
@@ -62,13 +63,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     private void addEvents() {
-
-
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
-                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
                         // set item as selected to persist highlight
                         menuItem.setChecked(true);
                         // close drawer when item is tapped
@@ -80,10 +80,7 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-
-
     private void addControls() {
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         mDrawerLayout = findViewById(R.id.drawer_layout);
@@ -91,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 toolbar, R.string.app_name, R.string.app_name);
         mDrawerToggle.setDrawerIndicatorEnabled(true);
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
     }
 
