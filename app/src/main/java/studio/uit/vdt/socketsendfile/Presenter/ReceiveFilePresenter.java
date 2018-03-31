@@ -50,7 +50,7 @@ public class ReceiveFilePresenter extends BasePresenter {
         super(context);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
         mData = new ArrayList<>();
-        receiveAdapter = new ReceiveAdapter(mData, context, false);
+        receiveAdapter = new ReceiveAdapter(mData, context);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(receiveAdapter);
@@ -90,6 +90,7 @@ public class ReceiveFilePresenter extends BasePresenter {
                     if (receive.getCount() == 0) {
                         hideProgress();
                         showToast("DONE!");
+                        count = -1;
                     }
 
                 }

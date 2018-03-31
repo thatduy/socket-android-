@@ -19,6 +19,7 @@ import java.util.Date;
 
 import studio.uit.vdt.socketsendfile.Presenter.SendFilePresenter;
 import studio.uit.vdt.socketsendfile.R;
+import studio.uit.vdt.socketsendfile.adapter.SendCompleteListener;
 import studio.uit.vdt.socketsendfile.model.SendModel;
 
 import static android.app.Activity.RESULT_OK;
@@ -27,7 +28,7 @@ import static android.app.Activity.RESULT_OK;
  * Created by ASUS on 29-Mar-18.
  */
 
-public class SendFragment extends Fragment {
+public class SendFragment extends Fragment implements SendCompleteListener{
 
     private Button btn_send_file;
     private SendFilePresenter sendFilePresenter;
@@ -49,7 +50,7 @@ public class SendFragment extends Fragment {
         btn_send_file = view.findViewById(R.id.btn_send_file);
         RecyclerView recyclerView = view.findViewById(R.id.my_recycler_view);
         sendFilePresenter = new SendFilePresenter(getContext(), SendFragment.this,
-                sendModels, recyclerView);
+                sendModels, recyclerView, this);
 
         btn_send_file.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,5 +110,11 @@ public class SendFragment extends Fragment {
         } catch (Exception e) {
             Log.d(TAG_SEND_FILE, e.toString());
         }
+    }
+
+    @Override
+    public void callback(boolean compelte) {
+        isSelectedFile = false;
+        btn_send_file.setText(getString(R.string.choose_file));
     }
 }

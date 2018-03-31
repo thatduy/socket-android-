@@ -28,7 +28,6 @@ import studio.uit.vdt.socketsendfile.model.SendModel;
 public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHolder> {
     private ArrayList<SendModel> mDataset;
     private Context context;
-    private boolean isSend = false;
     private final static String TAG = "ReceiveAdapter";
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -48,10 +47,10 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public ReceiveAdapter(ArrayList<SendModel> myDataset, Context context, boolean isSend ) {
+    public ReceiveAdapter(ArrayList<SendModel> myDataset, Context context ) {
         mDataset = myDataset;
         this.context = context;
-        this.isSend = isSend;
+
     }
 
     // Create new views (invoked by the layout manager)
@@ -66,14 +65,7 @@ public class ReceiveAdapter extends RecyclerView.Adapter<ReceiveAdapter.ViewHold
 
     private void open_file(String filename) {
         File file;
-        if(isSend){
-            file = new File(filename);
-        }else{
-            File myDir = Environment.getExternalStorageDirectory();
-            String FILE_TO_RECEIVED = myDir.getAbsolutePath() + "/";
-            file = new File(FILE_TO_RECEIVED + "SOCKETFILEs/" + filename);
-            Log.d(TAG, file.getAbsolutePath());
-        }
+        file = new File(filename);
 
         MimeTypeMap myMime = MimeTypeMap.getSingleton();
         Intent newIntent = new Intent(Intent.ACTION_VIEW);

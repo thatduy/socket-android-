@@ -29,6 +29,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import studio.uit.vdt.socketsendfile.adapter.ReceiveAdapter;
+import studio.uit.vdt.socketsendfile.adapter.SendCompleteListener;
 import studio.uit.vdt.socketsendfile.model.SendModel;
 
 /*
@@ -44,18 +45,20 @@ public class SendFilePresenter extends BasePresenter {
     private Fragment activity;
     private ServerSocket socket;
     private Socket client;
+    private SendCompleteListener listener;
 
     public SendFilePresenter(Context context, Fragment fragment,
-                             ArrayList<SendModel> models, RecyclerView recyclerView) {
+                             ArrayList<SendModel> models, RecyclerView recyclerView, SendCompleteListener listener) {
         super(context);
 
         this.models = models;
         this.activity = fragment;
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(context);
-        receiveAdapter = new ReceiveAdapter(models, context, true);
+        receiveAdapter = new ReceiveAdapter(models, context);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(receiveAdapter);
+        this.listener = listener;
     }
 
     public void updateList() {
@@ -184,6 +187,7 @@ public class SendFilePresenter extends BasePresenter {
             } catch (Exception e) {
                 // TODO: handle exception
                 Log.d(TAG, e.toString());
+
             } finally {
 
                 updateRemove();
@@ -198,13 +202,16 @@ public class SendFilePresenter extends BasePresenter {
 
         }
         private void updateRemove(){
+
             ((Activity)context).runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    listener.callback(true);
                     models.clear();
                     receiveAdapter.notifyDataSetChanged();
                     hideProgress();
                     showToast("DONE!");
+
 
 
                 }
