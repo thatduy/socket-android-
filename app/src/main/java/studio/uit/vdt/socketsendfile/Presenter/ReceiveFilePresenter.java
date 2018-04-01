@@ -4,7 +4,10 @@ package studio.uit.vdt.socketsendfile.Presenter;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -83,7 +86,7 @@ public class ReceiveFilePresenter extends BasePresenter {
                 public void run() {
                     SendModel receive = (SendModel) msg.obj;
                     progressDialog.setTitle("From " + receive.getIp());
-                    progressDialog.setMessage("Received " + receive.getName());
+                    progressDialog.setMessage("Receiving " + receive.getName());
                     mData.add(receive);
                     receiveAdapter.notifyDataSetChanged();
                     Log.d(TAG, "COUNT " + receive.getCount());
@@ -92,6 +95,12 @@ public class ReceiveFilePresenter extends BasePresenter {
                         showToast("DONE!");
                         count = -1;
                     }
+                    if( Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT){
+                        MediaScannerConnection.scanFile(context,
+                                new String[] { receive.getPath() }, null,
+                               null);
+                    }
+
 
                 }
             });
@@ -159,15 +168,15 @@ public class ReceiveFilePresenter extends BasePresenter {
 
             BufferedOutputStream out =
                     new BufferedOutputStream(new FileOutputStream(name));
-
+            Message message = new Message();
+            message.obj = new SendModel(count, ip, data.split(";")[0], new Date().toString(), name);
+            handler.handleMessage(message);
             int len;
             byte[] buffer = new byte[1024 * 50];
             while ((len = in.read(buffer)) > 0) {
                 out.write(buffer, 0, len);
             }
-            Message message = new Message();
-            message.obj = new SendModel(count, ip, data.split(";")[0], new Date().toString(), name);
-            handler.handleMessage(message);
+
             in.close();
             out.flush();
             out.close();

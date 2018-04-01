@@ -170,6 +170,9 @@ public class SendFilePresenter extends BasePresenter {
                             new FileInputStream(file.getPath()));
                     BufferedOutputStream out = new BufferedOutputStream(client.getOutputStream());
                     int len;
+                    Message message = new Message();
+                    message.obj = file;
+                    handler.handleMessage(message);
                     byte[] buffer = new byte[1024 * 50];
                     while ((len = in.read(buffer)) > 0) {
                         out.write(buffer, 0, len);
@@ -179,9 +182,7 @@ public class SendFilePresenter extends BasePresenter {
                     in.close();
                     out.close();
 
-                    Message message = new Message();
-                    message.obj = file;
-                    handler.handleMessage(message);
+
                 }
 
             } catch (Exception e) {
